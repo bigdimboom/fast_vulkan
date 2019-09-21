@@ -90,7 +90,7 @@ void VkDDRenderInterface::render()
 
 void VkDDRenderInterface::drawLabel(glm::vec3 pos, glm::vec3 color, const char* text, float scale, camera::FreeCamera* camera)
 {
-	//if (camera && camera->isPointInsideFrustum(pos))
+	if (camera && camera->isPointInsideFrustum(pos))
 	{
 		const ddVec3 textColor = { color.r, color.g, color.b };
 		const ddVec3 textPos = { pos.x, pos.y, pos.z };

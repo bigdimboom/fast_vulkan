@@ -122,6 +122,9 @@ void DebugGuiExample::render()
 
 	//d_debugDraw->drawDemoExample(*d_camera);
 	//dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, dd::colors::Green); // Grid from -50 to +50 in both X & Z
+	const ddVec3_In oo = { 0.0,0.0,0.0 };
+	const ddVec3_In cc = { 1.0,0.0,1.0 };
+	dd::point(oo, cc, 30.0, 0, false);
 	d_debugDraw->drawLabel(glm::vec3(0.0f, 0.0f, 0.0f), { 0.8f, 0.0f, 0.3f }, "this is origin", 2.0f, d_camera.get());
 	d_debugDraw->drawDemoExample(*d_camera);
 

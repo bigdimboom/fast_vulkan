@@ -153,6 +153,7 @@
     <ClCompile Include="source\engine\vkapi\vk_ctx.cpp" />
     <ClCompile Include="source\engine\window\vk_window.cpp" />
     <ClCompile Include="source\program\debug_gui_example.cpp" />
+    <ClCompile Include="source\program\triangle_example.cpp" />
     <ClCompile Include="source\test.main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -181,6 +182,7 @@
     <ClInclude Include="source\engine\vkapi\vk_ctx.h" />
     <ClInclude Include="source\engine\window\vk_window.h" />
     <ClInclude Include="source\program\debug_gui_example.h" />
+    <ClInclude Include="source\program\triangle_example.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
