@@ -1,25 +1,25 @@
-#include "debug_gui_example.h"
+#include "textured_cube_example.h"
 
 namespace program
 {
 
 
 
-DebugGuiExample::DebugGuiExample()
+TexturedCubeExample::TexturedCubeExample()
 	: app::VulanAppBase()
 {
 }
 
-DebugGuiExample::DebugGuiExample(int argc, const char** argv)
+TexturedCubeExample::TexturedCubeExample(int argc, const char** argv)
 	: app::VulanAppBase(argc, argv)
 {
 }
 
-DebugGuiExample::~DebugGuiExample()
+TexturedCubeExample::~TexturedCubeExample()
 {
 }
 
-bool DebugGuiExample::initialize()
+bool TexturedCubeExample::initialize()
 {
 	setInput(getptr());
 
@@ -38,6 +38,8 @@ bool DebugGuiExample::initialize()
 
 	d_debugDraw = std::make_unique<dd::VkDDRenderInterface>(d_vkContext);
 
+	d_cube = std::make_unique<renderer::TexturedCubeRdr>(d_vkContext, d_camera);
+
 	evDispatcher().listen(std::function<void(const SDL_Event & ev)>([this](const SDL_Event& ev)
 	{
 		switch (ev.window.event)
@@ -54,12 +56,12 @@ bool DebugGuiExample::initialize()
 	return true;
 }
 
-void DebugGuiExample::update(app::Timepoint now, app::Elapsed elapsed)
+void TexturedCubeExample::update(app::Timepoint now, app::Elapsed elapsed)
 {
 	d_debugDraw->update(d_camera->viewProj());
 }
 
-void DebugGuiExample::render()
+void TexturedCubeExample::render()
 {
 	static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -69,20 +71,29 @@ void DebugGuiExample::render()
 	{
 		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 		ImGui::ColorEdit3("clear color", (float*)& clear_color); // Edit 3 floats representing a color
+
+		if (ImGui::Button("update texture"))
+		{
+			d_cube = std::make_unique<renderer::TexturedCubeRdr>(d_vkContext, d_camera, "assets/crate.png");
+		}
+
 		ImGui::End();
 	}
 
-	d_overlay->drawDemo();
+	//d_overlay->drawDemo();
 	d_overlay->drawFPS();
 	d_overlay->end();
 
-	//d_debugDraw->drawDemoExample(*d_camera);
-	//dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, dd::colors::Green); // Grid from -50 to +50 in both X & Z
+	dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, dd::colors::Green); // Grid from -50 to +50 in both X & Z
 	const ddVec3_In oo = { 0.0,0.0,0.0 };
 	const ddVec3_In cc = { 1.0,0.0,1.0 };
-	dd::point(oo, cc, 30.0, 0, false);
-	d_debugDraw->drawLabel(glm::vec3(0.0f, 0.0f, 0.0f), { 0.8f, 0.0f, 0.3f }, "this is origin", 2.0f, d_camera.get());
-	d_debugDraw->drawDemoExample(*d_camera);
+	const ddVec3_In cx = { 1.0,0.8,1.0 };
+	const glm::mat4 transform(1.0);
+
+	dd::point(oo, cc, 10.0, 0, false);
+	dd::axisTriad(*((ddMat4x4_In*)& transform), 0.1, 1.0f);
+	dd::box(oo, cx, 3, 3, 3);
+	d_debugDraw->drawLabel(*((glm::vec3*) & oo), { 0.8f, 0.0f, 0.3f }, "(0,0,0)", 1.5, d_camera.get());
 
 	if (d_shouldDraw)
 	{
@@ -93,6 +104,10 @@ void DebugGuiExample::render()
 
 		d_vkContext->beginDefaultRenderPass();
 
+		d_vkContext->flushStaticDraws();
+
+		d_cube->render();
+
 		d_debugDraw->render();
 
 		d_overlay->render();
@@ -100,21 +115,21 @@ void DebugGuiExample::render()
 		d_vkContext->endDefaultRenderPass();
 
 		d_vkContext->frameEnd();
-
 		d_vkContext->framePresent();
 	}
 }
 
-void DebugGuiExample::cleanup()
+void TexturedCubeExample::cleanup()
 {
 	d_vkContext->vkDevice().waitIdle();
+	d_cube = nullptr;
 	d_overlay = nullptr;
 	d_debugDraw = nullptr;
 	d_camera = nullptr;
 	d_vkContext = nullptr;
 }
 
-void DebugGuiExample::handleKeyboard(SDL_Keycode keycode)
+void TexturedCubeExample::handleKeyboard(SDL_Keycode keycode)
 {
 	static float speed = 0.1f;
 
@@ -145,7 +160,7 @@ void DebugGuiExample::handleKeyboard(SDL_Keycode keycode)
 	}
 }
 
-void DebugGuiExample::handleMouse(float xpos, float ypos, bool& firstTouch)
+void TexturedCubeExample::handleMouse(float xpos, float ypos, bool& firstTouch)
 {
 	static float lastX = window().clentrez().x / 2.0f;
 	static float lastY = window().clentrez().y / 2.0f;

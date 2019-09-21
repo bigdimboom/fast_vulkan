@@ -36,7 +36,7 @@ VkDDRenderInterface::~VkDDRenderInterface()
 	/////////////////
 	d_vkCtx->vkDevice().destroyPipelineLayout(d_mvp.pipelineLayout);
 	d_vkCtx->vkDevice().destroyDescriptorSetLayout(d_mvp.descriptorSetLayout);
-	//d_vkCtx->vkDevice().freeDescriptorSets(d_vkCtx->vkDescriptorPool(), d_mvp.descriptorSet);
+	d_vkCtx->vkDevice().freeDescriptorSets(d_vkCtx->vkDescriptorPool(), d_mvp.descriptorSet);
 
 	if (d_linePointPipeline.pipelineHandle_depthTestEnabled_point)
 		d_vkCtx->vkDevice().destroyPipeline(d_linePointPipeline.pipelineHandle_depthTestEnabled_point);
@@ -50,11 +50,11 @@ VkDDRenderInterface::~VkDDRenderInterface()
 	d_vkCtx->vkDevice().destroyPipelineCache(d_linePointPipeline.pipelineCache);
 	d_vkCtx->vkDevice().destroyPipelineCache(d_textPipeline.pipelineCache);
 
-	d_vkCtx->vkDevice().destroyPipeline(d_textPipeline.pipeline);
-
+	//d_vkCtx->vkDevice().destroyImageView(d_text.imageView);
 	d_vkCtx->vkDevice().destroySampler(d_text.sampler);
 
-	//d_vkCtx->vkDevice().destroyImageView(d_text.imageView);
+	d_vkCtx->vkDevice().destroyPipeline(d_textPipeline.pipeline);
+
 	d_text.image = nullptr;
 
 	d_vkCtx->vkDevice().destroyPipelineLayout(d_text.pipelineLayout);
@@ -389,7 +389,7 @@ GlyphTextureHandle VkDDRenderInterface::createGlyphTexture(int width, int height
 		d_text.image->image,
 		vk::ImageViewType::e2D,
 		vk::Format::eR8Unorm,
-		vk::ComponentMapping(vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity),
+		vk::ComponentMapping(),
 		vk::ImageSubresourceRange(vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1)
 	));
 

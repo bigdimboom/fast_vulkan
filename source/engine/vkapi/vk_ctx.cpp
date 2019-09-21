@@ -115,6 +115,8 @@ Context::~Context()
 
 	d_logical_device.destroyDescriptorPool(d_descriptorPool);
 
+	removeAllStaticDraws();
+
 	destroyDrawCommandsAndSynchronization();
 
 	destroyFrameBuffers();
@@ -309,7 +311,7 @@ void Context::frameBegin()
 	d_commandBuffers[d_frameIndex].begin(vk::CommandBufferBeginInfo());
 }
 
-void Context::beginRenderPass()
+void Context::beginDefaultRenderPass()
 {
 	d_commandBuffers[d_frameIndex].beginRenderPass(
 		vk::RenderPassBeginInfo(
@@ -321,7 +323,23 @@ void Context::beginRenderPass()
 		vk::SubpassContents::eInline);
 }
 
-void Context::endRenderPass()
+void Context::flushStaticDraws()
+{
+	for (auto& elem : d_staticDraws)
+	{
+		d_commandBuffers[d_frameIndex].executeCommands(elem.second);
+	}
+}
+
+//void Context::recordStaticDraws()
+//{
+//	if (d_secondaryCmds.size())
+//	{
+//		d_commandBuffers[d_frameIndex].executeCommands(d_secondaryCmds);
+//	}
+//}
+
+void Context::endDefaultRenderPass()
 {
 	d_commandBuffers[d_frameIndex].endRenderPass();
 }
@@ -385,7 +403,7 @@ vk::CommandBuffer Context::beginSingleTimeCommands(bool begin)
 	// If requested, also start the new command buffer
 	if (begin)
 	{
-		cmdBuffer.begin(vk::CommandBufferBeginInfo());
+		cmdBuffer.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
 	}
 
 	return cmdBuffer;
@@ -411,6 +429,51 @@ void Context::flushSingleTimeCommands(vk::CommandBuffer& commandBuffer, bool end
 	d_logical_device.waitForFences(1, &fence, VK_TRUE, UINT_MAX);
 	d_logical_device.destroyFence(fence);
 	d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, 1, &commandBuffer);
+}
+
+void Context::addStaticDraw(std::function<void(vk::CommandBuffer, vk::RenderPass)> func, const char* key, vk::RenderPass renderpass)
+{
+	if (renderpass == vk::RenderPass(nullptr))
+	{
+		renderpass = defaultRenderPass();
+	}
+
+	auto secondaryCommands = d_logical_device.allocateCommandBuffers(vk::CommandBufferAllocateInfo(
+		d_queues[graphics].cmdPools,
+		vk::CommandBufferLevel::eSecondary,
+		d_commandBuffers.size()
+	));
+
+	for (int i = 0; i < secondaryCommands.size(); ++i)
+	{
+		auto cmd = secondaryCommands[i];
+		cmd.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+		vk::CommandBufferInheritanceInfo inheritInfo;
+		inheritInfo.framebuffer = d_swapchainFrameBuffers[i].frameBuffer;
+		inheritInfo.renderPass = renderpass;
+		cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eRenderPassContinue | vk::CommandBufferUsageFlagBits::eSimultaneousUse, &inheritInfo));
+		func(cmd, renderpass);
+		cmd.end();
+	}
+
+	d_staticDraws[key] = secondaryCommands;
+}
+
+void Context::removeStaticDraw(const char* key)
+{
+	assert(d_staticDraws.count(key) > 0);
+	d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, d_staticDraws[key]);
+	d_staticDraws.erase(key);
+}
+
+void Context::removeAllStaticDraws()
+{
+	for (auto& elem : d_staticDraws)
+	{
+		d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, elem.second);
+		elem.second.clear();
+	}
+	d_staticDraws.clear();
 }
 
 VkShaderModule Context::createShaderModule(const std::vector<char>& code)
@@ -641,6 +704,16 @@ void Context::transitionImageLayout(vk::Image image, vk::Format format, vk::Imag
 		barrier);
 
 	flushSingleTimeCommands(cmd, true);
+}
+
+std::shared_ptr<BufferObject> Context::createUniformBufferObject(uint64_t size)
+{
+	vk::BufferCreateInfo sbo_create_info = {};
+	VmaAllocationCreateInfo sbo_alloc_info = {};
+	sbo_create_info.size = size;
+	sbo_create_info.usage = vk::BufferUsageFlagBits::eUniformBuffer;
+	sbo_alloc_info.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;
+	return createSharedBufferObject(sbo_create_info, sbo_alloc_info);
 }
 
 // HELPERS
@@ -1163,8 +1236,9 @@ void Context::setupDescriptorPool()
 
 	d_descriptorPool = d_logical_device.createDescriptorPool(
 		vk::DescriptorPoolCreateInfo(
-		vk::DescriptorPoolCreateFlags(),
-		1000 * descriptorPoolSizes.size(),
+		vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+		/*vk::DescriptorPoolCreateFlags(),*/
+		1000u * descriptorPoolSizes.size(),
 		static_cast<uint32_t>(descriptorPoolSizes.size()),
 		descriptorPoolSizes.data()
 	)

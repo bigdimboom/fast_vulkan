@@ -5,23 +5,24 @@
 #include "../engine/vkapi/vk_ctx.h"
 #include "../engine/gui/vk_overlay.h"
 #include "../engine/debug_draw/vk_dd.h"
+#include "../engine/renderer/textured_cube_rdr.h"
 
 #include <memory>
 
 namespace program
 {
 
-class DebugGuiExample : public app::VulanAppBase, public app::IUserInput
+class TexturedCubeExample : public app::VulanAppBase, public app::IUserInput
 {
 public:
-	DebugGuiExample();
-	DebugGuiExample(int argc, const char** argv);
-	~DebugGuiExample();
+	TexturedCubeExample();
+	TexturedCubeExample(int argc, const char** argv);
+	~TexturedCubeExample();
 
-	DebugGuiExample(const DebugGuiExample&) = delete;
-	DebugGuiExample(DebugGuiExample&&) = delete;
-	void operator=(const DebugGuiExample&) = delete;
-	void operator=(DebugGuiExample&&) = delete;
+	TexturedCubeExample(const TexturedCubeExample&) = delete;
+	TexturedCubeExample(TexturedCubeExample&&) = delete;
+	void operator=(const TexturedCubeExample&) = delete;
+	void operator=(TexturedCubeExample&&) = delete;
 
 
 	// Inherited via VulanAppBase
@@ -41,10 +42,12 @@ public:
 
 private:
 	bool d_shouldDraw = true;
+	//std::shared_ptr<renderer::Renderer> d_renderer;
 	std::shared_ptr<camera::FreeCamera> d_camera;
 	std::shared_ptr<vkapi::Context> d_vkContext;
 	std::unique_ptr<gui::VkOverlay> d_overlay;
 	std::unique_ptr<dd::VkDDRenderInterface> d_debugDraw;
+	std::unique_ptr<renderer::TexturedCubeRdr> d_cube;
 };
 
 }

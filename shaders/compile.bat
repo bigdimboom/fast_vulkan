@@ -7,4 +7,7 @@ start glslangValidator.exe -V .\line_point.frag -o .\line_point.frag.spv
 start glslangValidator.exe -V .\triangle.vert -o .\triangle.vert.spv
 start glslangValidator.exe -V .\triangle.frag -o .\triangle.frag.spv
 
+start glslangValidator.exe -V .\cube.vert -o .\cube.vert.spv
+start glslangValidator.exe -V .\cube.frag -o .\cube.frag.spv
+
 pause

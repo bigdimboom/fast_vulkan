@@ -17,5 +17,4 @@ struct ImageObject
 	VmaAllocation alloc_meta;
 };
 
-
 } // end namespace vkapi

@@ -2,6 +2,8 @@
 #include "../window/vk_window.h"
 #include <array>
 #include "data_type.h"
+#include <functional>
+#include <map>
 
 namespace vkapi
 {
@@ -11,7 +13,7 @@ struct CtxSettings
 	uint32_t gpuid = 0;
 	bool debug = true;
 	bool vsync = true;
-	uint32_t backbuffer_count = 2;
+	uint32_t backbuffer_count = 3;
 	std::string appname = "vkapi";
 	std::string enginename = "vkapi_engine";
 	bool standalone_compute_queue = false;
@@ -56,13 +58,18 @@ public:
 	void setClearValue(float r, float g, float b, float a = 1.0f);
 	void setClearValues(vk::ClearColorValue color, vk::ClearDepthStencilValue depth = { 1.0f, 0u });
 	void frameBegin();
-	void beginRenderPass();
-	void endRenderPass();
+	void beginDefaultRenderPass();
+	void flushStaticDraws();
+	void endDefaultRenderPass();
 	void frameEnd();
 	void framePresent();
 
 	vk::CommandBuffer beginSingleTimeCommands(bool begin);
 	void flushSingleTimeCommands(vk::CommandBuffer& cmd, bool end);
+
+	void addStaticDraw(std::function<void(vk::CommandBuffer, vk::RenderPass)> func, const char* key, vk::RenderPass renderpass = nullptr);
+	void removeStaticDraw(const char* key);
+	void removeAllStaticDraws();
 
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	VkShaderModule createShaderModule(const std::string& filename);
@@ -82,6 +89,8 @@ public:
 
 	template<class T>
 	std::shared_ptr<BufferObject> createVertexBufferObject(const std::vector<T>& data);
+
+	std::shared_ptr<BufferObject> createUniformBufferObject(uint64_t size);
 
 protected:
 	// basic context
@@ -186,6 +195,9 @@ protected:
 	// comman buffer
 	std::vector<vk::CommandBuffer> d_commandBuffers;
 
+	// static draw secondary command buffer
+	std::map<std::string, std::vector<vk::CommandBuffer>> d_staticDraws;
+
 	// descriptor
 	vk::DescriptorPool d_descriptorPool;
 
@@ -216,11 +228,12 @@ inline std::shared_ptr<BufferObject> Context::createVertexBufferObject(const std
 	vboAllocInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;
 	auto vbo = createSharedBufferObject(vboInfo, vboAllocInfo);
 
-	vk:VkBufferCopy region = {};
+vk:VkBufferCopy region = {};
 	region.size = data.size() * sizeof(T);
 	copy(vbo->buffer, stagebuffer->buffer, region);
 
 	return vbo;
 }
+
 
 } // end namepsace vkapi
