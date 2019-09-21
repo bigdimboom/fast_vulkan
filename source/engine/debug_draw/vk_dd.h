@@ -4,13 +4,14 @@
 #include <SDL2/SDL.h>
 #include "../vkapi/vk_ctx.h"
 #include "../camera/free_camera.h"
+#include "../renderer/irenderer.h"
 
 #include <functional>
 
 namespace dd
 {
 
-class VkDDRenderInterface final : public dd::RenderInterface
+class VkDDRenderInterface final : public dd::RenderInterface, public renderer::IRenderer
 {
 public:
 	VkDDRenderInterface(std::shared_ptr<vkapi::Context> vkCtx);
@@ -18,7 +19,7 @@ public:
 
 	void update(const glm::mat4& mvp);
 	void prepare(FlushFlags flags = FlushFlags::FlushAll);
-	void render();
+	void render() override;
 
 	void drawLabel(glm::vec3 pos, glm::vec3 color, const char* text, float scale = 1.0f, camera::FreeCamera * cam = nullptr);
 	void drawDemoExample(camera::FreeCamera& cam);

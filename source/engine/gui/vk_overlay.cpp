@@ -61,10 +61,11 @@ VkOverlay::~VkOverlay()
 {
 	d_vkCtx->vkDevice().waitIdle();
 	
+
+
 	if (d_pipelineCache != vk::PipelineCache(nullptr))
 	{
 		d_vkCtx->vkDevice().destroyPipelineCache(d_pipelineCache);
-
 	}
 	
 	ImGui_ImplVulkan_Shutdown();

@@ -48,10 +48,23 @@ VkDDRenderInterface::~VkDDRenderInterface()
 		d_vkCtx->vkDevice().destroyPipeline(d_linePointPipeline.pipelineHandle_depthTestDisabled_line);
 
 	d_vkCtx->vkDevice().destroyPipelineCache(d_linePointPipeline.pipelineCache);
-	//////////////////
-	//TODO:
+	d_vkCtx->vkDevice().destroyPipelineCache(d_textPipeline.pipelineCache);
 
+	d_vkCtx->vkDevice().destroyPipeline(d_textPipeline.pipeline);
+
+	d_vkCtx->vkDevice().destroySampler(d_text.sampler);
+
+	//d_vkCtx->vkDevice().destroyImageView(d_text.imageView);
 	d_text.image = nullptr;
+
+	d_vkCtx->vkDevice().destroyPipelineLayout(d_text.pipelineLayout);
+	d_vkCtx->vkDevice().destroyDescriptorSetLayout(d_text.descriptorSetLayout);
+
+	d_vkCtx->vkDevice().destroyShaderModule(d_textPipeline.vert);
+	d_vkCtx->vkDevice().destroyShaderModule(d_textPipeline.frag);
+	d_vkCtx->vkDevice().destroyShaderModule(d_linePointPipeline.vert);
+	d_vkCtx->vkDevice().destroyShaderModule(d_linePointPipeline.frag);
+
 	d_draws.clear();
 }
 

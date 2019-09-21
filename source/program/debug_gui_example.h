@@ -12,17 +12,17 @@
 namespace program
 {
 
-class TriangleExample : public app::VulanAppBase, public app::IUserInput
+class DebugGuiExample : public app::VulanAppBase, public app::IUserInput
 {
 public:
-	TriangleExample();
-	TriangleExample(int argc, const char** argv);
-	~TriangleExample();
+	DebugGuiExample();
+	DebugGuiExample(int argc, const char** argv);
+	~DebugGuiExample();
 
-	TriangleExample(const TriangleExample&) = delete;
-	TriangleExample(TriangleExample&&) = delete;
-	void operator=(const TriangleExample&) = delete;
-	void operator=(TriangleExample&&) = delete;
+	DebugGuiExample(const DebugGuiExample&) = delete;
+	DebugGuiExample(DebugGuiExample&&) = delete;
+	void operator=(const DebugGuiExample&) = delete;
+	void operator=(DebugGuiExample&&) = delete;
 
 
 	// Inherited via VulanAppBase
@@ -42,7 +42,7 @@ public:
 
 private:
 	bool d_shouldDraw = true;
-	std::shared_ptr<renderer::Renderer> d_renderer;
+	//std::shared_ptr<renderer::Renderer> d_renderer;
 	std::shared_ptr<camera::FreeCamera> d_camera;
 	std::shared_ptr<vkapi::Context> d_vkContext;
 	std::unique_ptr<gui::VkOverlay> d_overlay;

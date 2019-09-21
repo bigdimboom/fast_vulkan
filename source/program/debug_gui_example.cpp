@@ -1,4 +1,4 @@
-#include "triangle_example.h"
+#include "debug_gui_example.h"
 
 #include "../engine/imgui/imgui.h"
 #include "../engine/imgui/imgui_impl_vulkan.h"
@@ -11,21 +11,21 @@ namespace program
 
 
 
-TriangleExample::TriangleExample()
+DebugGuiExample::DebugGuiExample()
 	: app::VulanAppBase()
 {
 }
 
-TriangleExample::TriangleExample(int argc, const char** argv)
+DebugGuiExample::DebugGuiExample(int argc, const char** argv)
 	: app::VulanAppBase(argc, argv)
 {
 }
 
-TriangleExample::~TriangleExample()
+DebugGuiExample::~DebugGuiExample()
 {
 }
 
-bool TriangleExample::initialize()
+bool DebugGuiExample::initialize()
 {
 	setInput(getptr());
 
@@ -98,12 +98,12 @@ bool TriangleExample::initialize()
 	return true;
 }
 
-void TriangleExample::update(app::Timepoint now, app::Elapsed elapsed)
+void DebugGuiExample::update(app::Timepoint now, app::Elapsed elapsed)
 {
 	d_debugDraw->update(d_camera->viewProj());
 }
 
-void TriangleExample::render()
+void DebugGuiExample::render()
 {
 	static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -147,16 +147,17 @@ void TriangleExample::render()
 	}
 }
 
-void TriangleExample::cleanup()
+void DebugGuiExample::cleanup()
 {
 	d_vkContext->vkDevice().waitIdle();
+	d_overlay = nullptr;
 	d_debugDraw = nullptr;
 	d_camera = nullptr;
-	d_renderer = nullptr;
+	//d_renderer = nullptr;
 	d_vkContext = nullptr;
 }
 
-void TriangleExample::handleKeyboard(SDL_Keycode keycode)
+void DebugGuiExample::handleKeyboard(SDL_Keycode keycode)
 {
 	static float speed = 0.1f;
 
@@ -187,7 +188,7 @@ void TriangleExample::handleKeyboard(SDL_Keycode keycode)
 	}
 }
 
-void TriangleExample::handleMouse(float xpos, float ypos, bool& firstTouch)
+void DebugGuiExample::handleMouse(float xpos, float ypos, bool& firstTouch)
 {
 	static float lastX = window().clentrez().x / 2.0f;
 	static float lastY = window().clentrez().y / 2.0f;
