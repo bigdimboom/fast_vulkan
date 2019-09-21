@@ -115,7 +115,7 @@ Context::~Context()
 
 	d_logical_device.destroyDescriptorPool(d_descriptorPool);
 
-	removeAllStaticDraws();
+	//removeAllStaticDraws();
 
 	destroyDrawCommandsAndSynchronization();
 
@@ -323,21 +323,14 @@ void Context::beginDefaultRenderPass()
 		vk::SubpassContents::eInline);
 }
 
-void Context::flushStaticDraws()
-{
-	for (auto& elem : d_staticDraws)
-	{
-		d_commandBuffers[d_frameIndex].executeCommands(elem.second);
-	}
-}
-
-//void Context::recordStaticDraws()
+//void Context::flushStaticDraws()
 //{
-//	if (d_secondaryCmds.size())
+//	for (auto& elem : d_staticDraws)
 //	{
-//		d_commandBuffers[d_frameIndex].executeCommands(d_secondaryCmds);
+//		d_commandBuffers[d_frameIndex].executeCommands(elem.second);
 //	}
 //}
+
 
 void Context::endDefaultRenderPass()
 {
@@ -431,50 +424,50 @@ void Context::flushSingleTimeCommands(vk::CommandBuffer& commandBuffer, bool end
 	d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, 1, &commandBuffer);
 }
 
-void Context::addStaticDraw(std::function<void(vk::CommandBuffer, vk::RenderPass)> func, const char* key, vk::RenderPass renderpass)
-{
-	if (renderpass == vk::RenderPass(nullptr))
-	{
-		renderpass = defaultRenderPass();
-	}
-
-	auto secondaryCommands = d_logical_device.allocateCommandBuffers(vk::CommandBufferAllocateInfo(
-		d_queues[graphics].cmdPools,
-		vk::CommandBufferLevel::eSecondary,
-		d_commandBuffers.size()
-	));
-
-	for (int i = 0; i < secondaryCommands.size(); ++i)
-	{
-		auto cmd = secondaryCommands[i];
-		cmd.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
-		vk::CommandBufferInheritanceInfo inheritInfo;
-		inheritInfo.framebuffer = d_swapchainFrameBuffers[i].frameBuffer;
-		inheritInfo.renderPass = renderpass;
-		cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eRenderPassContinue | vk::CommandBufferUsageFlagBits::eSimultaneousUse, &inheritInfo));
-		func(cmd, renderpass);
-		cmd.end();
-	}
-
-	d_staticDraws[key] = secondaryCommands;
-}
-
-void Context::removeStaticDraw(const char* key)
-{
-	assert(d_staticDraws.count(key) > 0);
-	d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, d_staticDraws[key]);
-	d_staticDraws.erase(key);
-}
-
-void Context::removeAllStaticDraws()
-{
-	for (auto& elem : d_staticDraws)
-	{
-		d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, elem.second);
-		elem.second.clear();
-	}
-	d_staticDraws.clear();
-}
+//void Context::addStaticDraw(std::function<void(vk::CommandBuffer, vk::RenderPass)> func, const char* key, vk::RenderPass renderpass)
+//{
+//	if (renderpass == vk::RenderPass(nullptr))
+//	{
+//		renderpass = defaultRenderPass();
+//	}
+//
+//	auto secondaryCommands = d_logical_device.allocateCommandBuffers(vk::CommandBufferAllocateInfo(
+//		d_queues[graphics].cmdPools,
+//		vk::CommandBufferLevel::eSecondary,
+//		d_commandBuffers.size()
+//	));
+//
+//	for (int i = 0; i < secondaryCommands.size(); ++i)
+//	{
+//		auto cmd = secondaryCommands[i];
+//		cmd.reset(vk::CommandBufferResetFlagBits::eReleaseResources);
+//		vk::CommandBufferInheritanceInfo inheritInfo;
+//		inheritInfo.framebuffer = d_swapchainFrameBuffers[i].frameBuffer;
+//		inheritInfo.renderPass = renderpass;
+//		cmd.begin(vk::CommandBufferBeginInfo(vk::CommandBufferUsageFlagBits::eRenderPassContinue | vk::CommandBufferUsageFlagBits::eSimultaneousUse, &inheritInfo));
+//		func(cmd, renderpass);
+//		cmd.end();
+//	}
+//
+//	d_staticDraws[key] = secondaryCommands;
+//}
+//
+//void Context::removeStaticDraw(const char* key)
+//{
+//	assert(d_staticDraws.count(key) > 0);
+//	d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, d_staticDraws[key]);
+//	d_staticDraws.erase(key);
+//}
+//
+//void Context::removeAllStaticDraws()
+//{
+//	for (auto& elem : d_staticDraws)
+//	{
+//		d_logical_device.freeCommandBuffers(d_queues[graphics].cmdPools, elem.second);
+//		elem.second.clear();
+//	}
+//	d_staticDraws.clear();
+//}
 
 VkShaderModule Context::createShaderModule(const std::vector<char>& code)
 {
@@ -512,12 +505,33 @@ void Context::copy(vk::Buffer dst, vk::Image src, const vk::BufferImageCopy& reg
 	flushSingleTimeCommands(cmd, true);
 }
 
-void Context::upload(BufferObject& dst_hostVisable, void* src_host, size_t size_bytes)
+void Context::upload(BufferObject& dst_hostVisable, void* src_host, size_t size_bytes, size_t dst_offset)
 {
 	void* dst = nullptr;
 	check_error(vmaMapMemory(d_allocator, dst_hostVisable.alloc_meta, &dst));
-	memcpy(dst, src_host, size_bytes);
+	memcpy((uint8_t*)dst + dst_offset, src_host, size_bytes);
 	vmaUnmapMemory(d_allocator, dst_hostVisable.alloc_meta);
+}
+
+void Context::copy(vk::Buffer dst, vk::Buffer src, const std::vector<vk::BufferCopy>& regions)
+{
+	auto cmd = beginSingleTimeCommands(true);
+	cmd.copyBuffer(src, dst, regions);
+	flushSingleTimeCommands(cmd, true);
+}
+
+void Context::copy(vk::Image dst, vk::Buffer src, const std::vector<vk::BufferImageCopy>& regions, vk::ImageLayout layout)
+{
+	auto cmd = beginSingleTimeCommands(true);
+	cmd.copyBufferToImage(src, dst, layout, regions);
+	flushSingleTimeCommands(cmd, true);
+}
+
+void Context::copy(vk::Buffer dst, vk::Image src, const std::vector<vk::BufferImageCopy>& regions, vk::ImageLayout layout)
+{
+	auto cmd = beginSingleTimeCommands(true);
+	cmd.copyImageToBuffer(src, layout, dst, regions);
+	flushSingleTimeCommands(cmd, true);
 }
 
 std::shared_ptr<BufferObject> Context::createSharedBufferObject(const vk::BufferCreateInfo& bufferinfo, const VmaAllocationCreateInfo& alloc_info)
@@ -623,6 +637,18 @@ std::shared_ptr<ImageObject> Context::createTextureImage2D(int width, int height
 
 void Context::transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
 {
+	vk::ImageSubresourceRange subresourceRange = {};
+	subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
+	subresourceRange.baseMipLevel = 0;
+	subresourceRange.levelCount = 1;
+	subresourceRange.baseArrayLayer = 0;
+	subresourceRange.layerCount = 1;
+
+	transitionImageLayout(image, format, oldLayout, newLayout, subresourceRange);
+}
+
+void Context::transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageSubresourceRange subresourceRange)
+{
 	auto cmd = beginSingleTimeCommands(true);
 	vk::ImageMemoryBarrier barrier = {};
 	barrier.oldLayout = oldLayout;
@@ -631,12 +657,7 @@ void Context::transitionImageLayout(vk::Image image, vk::Format format, vk::Imag
 	barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
 	barrier.image = image;
-	barrier.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
-	barrier.subresourceRange.baseMipLevel = 0;
-	barrier.subresourceRange.levelCount = 1;
-	barrier.subresourceRange.baseArrayLayer = 0;
-	barrier.subresourceRange.layerCount = 1;
-
+	barrier.subresourceRange = subresourceRange;
 	barrier.srcAccessMask = vk::AccessFlags();  //
 	barrier.dstAccessMask = vk::AccessFlags();  //
 
@@ -714,6 +735,16 @@ std::shared_ptr<BufferObject> Context::createUniformBufferObject(uint64_t size)
 	sbo_create_info.usage = vk::BufferUsageFlagBits::eUniformBuffer;
 	sbo_alloc_info.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;
 	return createSharedBufferObject(sbo_create_info, sbo_alloc_info);
+}
+
+std::shared_ptr<BufferObject> Context::createStagingBufferObject(uint64_t size)
+{
+	vk::BufferCreateInfo stagingBufferInfo = {};
+	VmaAllocationCreateInfo stagingAllocInfo = {};
+	stagingBufferInfo.size = size;
+	stagingBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+	stagingAllocInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;
+	return createSharedBufferObject(stagingBufferInfo, stagingAllocInfo);
 }
 
 // HELPERS
@@ -1238,7 +1269,7 @@ void Context::setupDescriptorPool()
 		vk::DescriptorPoolCreateInfo(
 		vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
 		/*vk::DescriptorPoolCreateFlags(),*/
-		1000u * descriptorPoolSizes.size(),
+		static_cast<uint32_t>(1000 * descriptorPoolSizes.size()),
 		static_cast<uint32_t>(descriptorPoolSizes.size()),
 		descriptorPoolSizes.data()
 	)

@@ -1,25 +1,25 @@
-#include "textured_cube_example.h"
+#include "skybox_example.h"
 
 namespace program
 {
 
 
 
-TexturedCubeExample::TexturedCubeExample()
+SkyboxExample::SkyboxExample()
 	: app::VulanAppBase()
 {
 }
 
-TexturedCubeExample::TexturedCubeExample(int argc, const char** argv)
+SkyboxExample::SkyboxExample(int argc, const char** argv)
 	: app::VulanAppBase(argc, argv)
 {
 }
 
-TexturedCubeExample::~TexturedCubeExample()
+SkyboxExample::~SkyboxExample()
 {
 }
 
-bool TexturedCubeExample::initialize()
+bool SkyboxExample::initialize()
 {
 	setInput(getptr());
 
@@ -40,6 +40,32 @@ bool TexturedCubeExample::initialize()
 
 	d_cube = std::make_unique<renderer::TexturedCubeRdr>(d_vkContext, d_camera);
 
+	d_files = std::vector<std::string>(); d_files.resize(renderer::SkyboxRdr::FaceSize);
+
+	d_files[renderer::SkyboxRdr::Right] = "assets/skybox/stormydays/stormydays_rt.tga";
+	d_files[renderer::SkyboxRdr::Left] = "assets/skybox/stormydays/stormydays_lf.tga";
+	d_files[renderer::SkyboxRdr::Top] = "assets/skybox/stormydays/stormydays_up.tga";
+	d_files[renderer::SkyboxRdr::Bottom] = "assets/skybox/stormydays/stormydays_dn.tga";
+	d_files[renderer::SkyboxRdr:: Front] = "assets/skybox/stormydays/stormydays_ft.tga";
+	d_files[renderer::SkyboxRdr::Back] = "assets/skybox/stormydays/stormydays_bk.tga";
+
+	d_skyBox = std::make_unique<renderer::SkyboxRdr>(d_vkContext, d_camera, d_files);
+
+	//files[renderer::SkyboxRdr::Right] = "assets/skybox/lmcity/lmcity_rt.tga";
+	//files[renderer::SkyboxRdr::Left] = "assets/skybox/lmcity/lmcity_lf.tga";
+	//files[renderer::SkyboxRdr::Top] = "assets/skybox/lmcity/lmcity_up.tga";
+	//files[renderer::SkyboxRdr::Bottom] = "assets/skybox/lmcity/lmcity_dn.tga";
+	//files[renderer::SkyboxRdr::Front] = "assets/skybox/lmcity/lmcity_ft.tga";
+	//files[renderer::SkyboxRdr::Back] = "assets/skybox/lmcity/lmcity_bk.tga";
+
+	d_files[renderer::SkyboxRdr::Right] = "assets/skybox/mp_orbital/orbital-element_rt.tga";
+	d_files[renderer::SkyboxRdr::Left] = "assets/skybox/mp_orbital/orbital-element_lf.tga";
+	d_files[renderer::SkyboxRdr::Top] = "assets/skybox/mp_orbital/orbital-element_up.tga";
+	d_files[renderer::SkyboxRdr::Bottom] = "assets/skybox/mp_orbital/orbital-element_dn.tga";
+	d_files[renderer::SkyboxRdr::Front] = "assets/skybox/mp_orbital/orbital-element_ft.tga";
+	d_files[renderer::SkyboxRdr::Back] = "assets/skybox/mp_orbital/orbital-element_bk.tga";
+
+
 	evDispatcher().listen(std::function<void(const SDL_Event & ev)>([this](const SDL_Event& ev)
 	{
 		switch (ev.window.event)
@@ -56,12 +82,12 @@ bool TexturedCubeExample::initialize()
 	return true;
 }
 
-void TexturedCubeExample::update(app::Timepoint now, app::Elapsed elapsed)
+void SkyboxExample::update(app::Timepoint now, app::Elapsed elapsed)
 {
 	d_debugDraw->update(d_camera->viewProj());
 }
 
-void TexturedCubeExample::render()
+void SkyboxExample::render()
 {
 	static ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
@@ -77,6 +103,11 @@ void TexturedCubeExample::render()
 			d_cube = std::make_unique<renderer::TexturedCubeRdr>(d_vkContext, d_camera, "assets/crate.png");
 		}
 
+		if (ImGui::Button("update skybox"))
+		{
+			d_skyBox = std::make_unique<renderer::SkyboxRdr>(d_vkContext, d_camera, d_files);
+		}
+
 		ImGui::End();
 	}
 
@@ -87,7 +118,7 @@ void TexturedCubeExample::render()
 	dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, dd::colors::Green); // Grid from -50 to +50 in both X & Z
 	const ddVec3_In oo = { 0.0f,0.0f,0.0f };
 	const ddVec3_In cc = { 1.0f,0.0f,1.0f };
-	const ddVec3_In cx = { 1.0f,0.8f,1.0f };
+	const ddVec3_In cx = { 0.2f,0.2f,1.0f };
 	const glm::mat4 transform(1.0);
 
 	dd::point(oo, cc, 10.0, 0, false);
@@ -106,7 +137,10 @@ void TexturedCubeExample::render()
 
 		//d_vkContext->flushStaticDraws();
 
+
 		d_cube->render();
+
+		d_skyBox->render();
 
 		d_debugDraw->render();
 
@@ -119,7 +153,7 @@ void TexturedCubeExample::render()
 	}
 }
 
-void TexturedCubeExample::cleanup()
+void SkyboxExample::cleanup()
 {
 	d_vkContext->vkDevice().waitIdle();
 	d_cube = nullptr;
@@ -129,7 +163,7 @@ void TexturedCubeExample::cleanup()
 	d_vkContext = nullptr;
 }
 
-void TexturedCubeExample::handleKeyboard(SDL_Keycode keycode)
+void SkyboxExample::handleKeyboard(SDL_Keycode keycode)
 {
 	static float speed = 0.1f;
 
@@ -160,7 +194,7 @@ void TexturedCubeExample::handleKeyboard(SDL_Keycode keycode)
 	}
 }
 
-void TexturedCubeExample::handleMouse(float xpos, float ypos, bool& firstTouch)
+void SkyboxExample::handleMouse(float xpos, float ypos, bool& firstTouch)
 {
 	static float lastX = window().clentrez().x / 2.0f;
 	static float lastY = window().clentrez().y / 2.0f;

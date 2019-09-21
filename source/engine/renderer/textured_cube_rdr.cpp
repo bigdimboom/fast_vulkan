@@ -257,7 +257,7 @@ void TexturedCubeRdr::setupUBO(const std::string& image_path)
 
 	d_ubo.descriptorBufferInfo.buffer = d_ubo.mvpBuffer->buffer;
 	d_ubo.descriptorBufferInfo.offset = 0;
-	d_ubo.descriptorBufferInfo.range = sizeof(glm::vec2);
+	d_ubo.descriptorBufferInfo.range = sizeof(MVP);
 
 	d_ubo.descriptorImageInfo.sampler = d_ubo.sampler;
 	d_ubo.descriptorImageInfo.imageView = d_ubo.textureView;

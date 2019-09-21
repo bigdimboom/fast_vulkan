@@ -59,7 +59,7 @@ public:
 	void setClearValues(vk::ClearColorValue color, vk::ClearDepthStencilValue depth = { 1.0f, 0u });
 	void frameBegin();
 	void beginDefaultRenderPass();
-	void flushStaticDraws();
+	//void flushStaticDraws();
 	void endDefaultRenderPass();
 	void frameEnd();
 	void framePresent();
@@ -67,9 +67,9 @@ public:
 	vk::CommandBuffer beginSingleTimeCommands(bool begin);
 	void flushSingleTimeCommands(vk::CommandBuffer& cmd, bool end);
 
-	void addStaticDraw(std::function<void(vk::CommandBuffer, vk::RenderPass)> func, const char* key, vk::RenderPass renderpass = nullptr);
-	void removeStaticDraw(const char* key);
-	void removeAllStaticDraws();
+	//void addStaticDraw(std::function<void(vk::CommandBuffer, vk::RenderPass)> func, const char* key, vk::RenderPass renderpass = nullptr);
+	//void removeStaticDraw(const char* key);
+	//void removeAllStaticDraws();
 
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	VkShaderModule createShaderModule(const std::string& filename);
@@ -77,7 +77,12 @@ public:
 	void copy(vk::Buffer dst, vk::Buffer src, const vk::BufferCopy& region);
 	void copy(vk::Image  dst, vk::Buffer src, const vk::BufferImageCopy& region, vk::ImageLayout layout = vk::ImageLayout::eTransferDstOptimal);
 	void copy(vk::Buffer dst, vk::Image  src, const vk::BufferImageCopy& region, vk::ImageLayout layout = vk::ImageLayout::eTransferSrcOptimal);
-	void upload(BufferObject& dst_hostVisable, void* src_host, size_t size_bytes);
+	void upload(BufferObject& dst_hostVisable, void* src_host, size_t size_bytes, size_t dst_offset = 0);
+
+	void copy(vk::Buffer dst, vk::Buffer src, const std::vector<vk::BufferCopy>& regions);
+	void copy(vk::Image  dst, vk::Buffer src, const std::vector<vk::BufferImageCopy>& regions, vk::ImageLayout layout = vk::ImageLayout::eTransferDstOptimal);
+	void copy(vk::Buffer dst, vk::Image  src, const std::vector<vk::BufferImageCopy>& regions, vk::ImageLayout layout = vk::ImageLayout::eTransferSrcOptimal);
+
 
 	std::shared_ptr<BufferObject> createSharedBufferObject(const vk::BufferCreateInfo& bufferinfo, const VmaAllocationCreateInfo& alloc_info);
 
@@ -87,10 +92,14 @@ public:
 
 	void transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
+	void transitionImageLayout(vk::Image image, vk::Format format, vk::ImageLayout oldLayout, vk::ImageLayout newLayout, vk::ImageSubresourceRange subresourceRange);
+
 	template<class T>
 	std::shared_ptr<BufferObject> createVertexBufferObject(const std::vector<T>& data);
 
 	std::shared_ptr<BufferObject> createUniformBufferObject(uint64_t size);
+
+	std::shared_ptr<BufferObject> createStagingBufferObject(uint64_t size);
 
 protected:
 	// basic context
@@ -195,8 +204,8 @@ protected:
 	// comman buffer
 	std::vector<vk::CommandBuffer> d_commandBuffers;
 
-	// static draw secondary command buffer
-	std::map<std::string, std::vector<vk::CommandBuffer>> d_staticDraws;
+	//// static draw secondary command buffer
+	//std::map<std::string, std::vector<vk::CommandBuffer>> d_staticDraws;
 
 	// descriptor
 	vk::DescriptorPool d_descriptorPool;
@@ -228,7 +237,7 @@ inline std::shared_ptr<BufferObject> Context::createVertexBufferObject(const std
 	vboAllocInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;
 	auto vbo = createSharedBufferObject(vboInfo, vboAllocInfo);
 
-vk:VkBufferCopy region = {};
+	vk::BufferCopy region = {};
 	region.size = data.size() * sizeof(T);
 	copy(vbo->buffer, stagebuffer->buffer, region);
 
