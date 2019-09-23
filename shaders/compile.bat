@@ -9,6 +9,7 @@ start glslangValidator.exe -V .\triangle.frag -o .\triangle.frag.spv
 
 start glslangValidator.exe -V .\cube.vert -o .\cube.vert.spv
 start glslangValidator.exe -V .\cube.frag -o .\cube.frag.spv
+start glslangValidator.exe -V .\cube_envmap.frag -o .\cube_envmap.frag.spv
 
 start glslangValidator.exe -V .\skybox.vert -o .\skybox.vert.spv
 start glslangValidator.exe -V .\skybox.frag -o .\skybox.frag.spv

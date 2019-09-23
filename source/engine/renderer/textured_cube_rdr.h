@@ -10,6 +10,8 @@ class TexturedCubeRdr : public renderer::IRenderer
 {
 public:
 	TexturedCubeRdr(std::shared_ptr<vkapi::Context> vkCtx, std::shared_ptr<camera::FreeCamera> cam, const char* file = nullptr);
+	TexturedCubeRdr(std::shared_ptr<vkapi::Context> vkCtx, std::shared_ptr<camera::FreeCamera> cam, vk::DescriptorImageInfo envmap_info, const char* file = nullptr);
+
 	~TexturedCubeRdr();
 
 	TexturedCubeRdr(const TexturedCubeRdr&) = delete;
@@ -20,6 +22,8 @@ public:
 	void setTransform(const glm::mat4& xfm);
 
 	void setCamera(std::shared_ptr<camera::FreeCamera> cam = nullptr);
+
+	void tweekTextureRate(float rate);
 
 	void render() override;
 
@@ -47,6 +51,7 @@ private:
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 proj;
+		glm::vec3 campos;
 	}d_mvp;
 
 	struct
@@ -63,8 +68,16 @@ private:
 
 		vk::DescriptorBufferInfo descriptorBufferInfo = {};
 		vk::DescriptorImageInfo descriptorImageInfo = {};
+
 		std::vector<vk::WriteDescriptorSet> writeDescriptorSets = {};
 	}d_ubo;
+
+	struct
+	{
+		bool  enable = false;
+		float blend_rate = 1.0f;
+		vk::DescriptorImageInfo descriptorImageInfo;
+	}d_envrmntMap;
 
 	struct
 	{

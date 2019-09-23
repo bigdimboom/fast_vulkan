@@ -17,6 +17,7 @@ TexturedCubeRdr::TexturedCubeRdr(std::shared_ptr<vkapi::Context> vkCtx, std::sha
 	d_mvp.model = glm::mat4(1.0);
 	d_mvp.view = d_cam->view();
 	d_mvp.proj = d_cam->proj();
+	d_mvp.campos = d_cam->position();
 
 	setViewport(d_vkCtx->viewport());
 	setRenderAera(d_vkCtx->renderArea());
@@ -27,6 +28,34 @@ TexturedCubeRdr::TexturedCubeRdr(std::shared_ptr<vkapi::Context> vkCtx, std::sha
 	{
 		texture_file = std::string(file);
 	}
+
+	setupVBO();
+	setupUBO(texture_file);
+	setupPipeline();
+}
+
+TexturedCubeRdr::TexturedCubeRdr(std::shared_ptr<vkapi::Context> vkCtx, std::shared_ptr<camera::FreeCamera> cam, vk::DescriptorImageInfo envmap_info, const char* file)
+	: d_vkCtx(vkCtx)
+	, d_cam(cam)
+{
+	assert(d_cam && d_vkCtx);
+	d_mvp.model = glm::mat4(1.0);
+	d_mvp.view = d_cam->view();
+	d_mvp.proj = d_cam->proj();
+	d_mvp.campos = d_cam->position();
+
+	setViewport(d_vkCtx->viewport());
+	setRenderAera(d_vkCtx->renderArea());
+
+	std::string texture_file(DEFAULT_TEXTURE);
+
+	if (file)
+	{
+		texture_file = std::string(file);
+	}
+
+	d_envrmntMap.descriptorImageInfo = envmap_info;
+	d_envrmntMap.enable = true;
 
 	setupVBO();
 	setupUBO(texture_file);
@@ -60,6 +89,19 @@ void TexturedCubeRdr::setCamera(std::shared_ptr<camera::FreeCamera> cam)
 	d_cam = cam;
 }
 
+//void TexturedCubeRdr::setEnvrmntMap(vk::ImageView cubmapView, vk::Sampler cubemapSampler)
+//{
+//	d_envrmntMap.enable = true;
+//	d_envrmntMap.descriptorImageInfo.imageView = cubmapView;
+//	d_envrmntMap.descriptorImageInfo.sampler = cubemapSampler;
+//	d_envrmntMap.descriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+//}
+
+void TexturedCubeRdr::tweekTextureRate(float rate)
+{
+	d_envrmntMap.blend_rate = rate;
+}
+
 void TexturedCubeRdr::setViewport(vk::Viewport port)
 {
 	d_viewport = port;
@@ -76,6 +118,7 @@ void TexturedCubeRdr::render()
 	{
 		d_mvp.view = d_cam->view();
 		d_mvp.proj = d_cam->proj();
+		d_mvp.campos = d_cam->position();
 	}
 
 	d_vkCtx->upload(*d_ubo.mvpBuffer, &d_mvp, sizeof(MVP));
@@ -96,6 +139,7 @@ void TexturedCubeRdr::render()
 
 	vk::DeviceSize offsets = 0;
 	cmd.bindVertexBuffers(0, d_bufferData.vbo->buffer, offsets);
+	cmd.pushConstants<float>(d_ubo.pipelineLayout, vk::ShaderStageFlagBits::eFragment, 0, { d_envrmntMap.blend_rate });
 	cmd.draw(d_bufferData.nVerts, 1, 0, 0);
 }
 
@@ -233,8 +277,18 @@ void TexturedCubeRdr::setupUBO(const std::string& image_path)
 		vk::DescriptorSetLayoutBinding(
 			1, vk::DescriptorType::eCombinedImageSampler,
 			1,  vk::ShaderStageFlagBits::eFragment
-	)
+		),
 	};
+
+	if (d_envrmntMap.enable)
+	{
+		// cube map, aka envrmrnt map
+		d_ubo.layoutBindings.push_back(
+			vk::DescriptorSetLayoutBinding(
+			2, vk::DescriptorType::eCombinedImageSampler,
+			1, vk::ShaderStageFlagBits::eFragment
+		));
+	}
 
 	d_ubo.descriptorSetLayout =
 		d_vkCtx->vkDevice().createDescriptorSetLayout(vk::DescriptorSetLayoutCreateInfo(
@@ -249,10 +303,16 @@ void TexturedCubeRdr::setupUBO(const std::string& image_path)
 		1, &d_ubo.descriptorSetLayout
 		))[0];
 
+	vk::PushConstantRange pushConstantRange(
+		vk::ShaderStageFlagBits::eFragment,
+		0, sizeof(float)
+	);
+
 	d_ubo.pipelineLayout =
 		d_vkCtx->vkDevice().createPipelineLayout(vk::PipelineLayoutCreateInfo(
 		vk::PipelineLayoutCreateFlags(),
-		1, &d_ubo.descriptorSetLayout
+		1, &d_ubo.descriptorSetLayout,
+		1, &pushConstantRange
 		));
 
 	d_ubo.descriptorBufferInfo.buffer = d_ubo.mvpBuffer->buffer;
@@ -263,7 +323,6 @@ void TexturedCubeRdr::setupUBO(const std::string& image_path)
 	d_ubo.descriptorImageInfo.imageView = d_ubo.textureView;
 	d_ubo.descriptorImageInfo.imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 
-	// TODO:
 	d_ubo.writeDescriptorSets = {
 		vk::WriteDescriptorSet(d_ubo.descriptorSet, 0, 0, 1,
 			vk::DescriptorType::eUniformBuffer, nullptr, &d_ubo.descriptorBufferInfo
@@ -272,6 +331,13 @@ void TexturedCubeRdr::setupUBO(const std::string& image_path)
 			vk::DescriptorType::eCombinedImageSampler, &d_ubo.descriptorImageInfo, nullptr
 		)
 	};
+
+	if (d_envrmntMap.enable)
+	{
+		d_ubo.writeDescriptorSets.push_back(vk::WriteDescriptorSet(d_ubo.descriptorSet, 2, 0, 1,
+			vk::DescriptorType::eCombinedImageSampler, &d_envrmntMap.descriptorImageInfo, nullptr
+		));
+	}
 
 	d_vkCtx->vkDevice().updateDescriptorSets(d_ubo.writeDescriptorSets, nullptr);
 }
@@ -283,9 +349,18 @@ void TexturedCubeRdr::setupPipeline()
 		app::SystemMgr::instance().settings().shader_dir + "cube.vert.spv"
 	);
 
-	d_pipeline.fs = d_vkCtx->createShaderModule(
-		app::SystemMgr::instance().settings().shader_dir + "cube.frag.spv"
-	);
+	if (!d_envrmntMap.enable)
+	{
+		d_pipeline.fs = d_vkCtx->createShaderModule(
+			app::SystemMgr::instance().settings().shader_dir + "cube.frag.spv"
+		);
+	}
+	else
+	{
+		d_pipeline.fs = d_vkCtx->createShaderModule(
+			app::SystemMgr::instance().settings().shader_dir + "cube_envmap.frag.spv"
+		);
+	}
 
 	d_pipeline.shaderCreateInfos = {
 		vk::PipelineShaderStageCreateInfo(

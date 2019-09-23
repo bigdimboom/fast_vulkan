@@ -39,6 +39,8 @@ public:
 	void setViewport(vk::Viewport viewport);
 	void setRenderArea(vk::Rect2D scissor);
 
+	vk::DescriptorImageInfo cubeMapInfo() const;
+
 private:
 
 	std::shared_ptr<vkapi::Context> d_vkCtx;

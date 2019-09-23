@@ -98,6 +98,11 @@ void SkyboxRdr::setRenderArea(vk::Rect2D scissor)
 	d_renderArea = scissor;
 }
 
+vk::DescriptorImageInfo SkyboxRdr::cubeMapInfo() const
+{
+	return d_ubo.descriptorImageInfo;
+}
+
 // HELPERS
 bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 {
@@ -108,10 +113,12 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 
 	int channels = 4;
 	int width = 0, height = 0, nrComponents = 0;
-	if (!stbi_load(faces[0].c_str(), &width, &height, &nrComponents, STBI_rgb_alpha))
+	unsigned char* data = stbi_load(faces[0].c_str(), &width, &height, &nrComponents, STBI_rgb_alpha);
+	if (!data)
 	{
 		return false;
 	}
+	stbi_image_free(data);
 
 	vk::Format format = vk::Format::eR8G8B8A8Unorm;
 
@@ -132,16 +139,15 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 		vk::ImageLayout::eUndefined),
 		image_alloc_info);
 
-	auto stagebuffer = d_vkCtx->createStagingBufferObject(width * height * channels * 6);
-	std::size_t offset = 0;
+	auto stagebuffer = d_vkCtx->createStagingBufferObject(width * height * channels * FaceSize);
 	std::vector<vk::BufferImageCopy> bufferCopyRegions;
 
-	for (unsigned int face_id = 0; face_id < faces.size(); face_id++)
+	for (unsigned int face_id = 0; face_id < FaceSize; face_id++)
 	{
 		unsigned char* data = stbi_load(faces[face_id].c_str(), &width, &height, &nrComponents, STBI_rgb_alpha);
 		if (data)
 		{
-			d_vkCtx->upload(*stagebuffer, data, width * height * channels, offset);
+			d_vkCtx->upload(*stagebuffer, data, width * height * channels, width * height * channels * face_id);
 
 
 			vk::BufferImageCopy bufferCopyRegion = {};
@@ -152,7 +158,7 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 			bufferCopyRegion.imageExtent.width = width;
 			bufferCopyRegion.imageExtent.height = height;
 			bufferCopyRegion.imageExtent.depth = 1;
-			bufferCopyRegion.bufferOffset = offset;
+			bufferCopyRegion.bufferOffset = width * height * channels * face_id;
 
 			bufferCopyRegions.push_back(bufferCopyRegion);
 
@@ -163,8 +169,6 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 			SDL_Log("Cubemap texture failed to load at path: %s\n", faces[face_id].c_str());
 			return false;
 		}
-
-		offset += width * height * channels;
 	}
 
 	// Image barrier for optimal image (target)
@@ -173,7 +177,7 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 	subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
 	subresourceRange.baseMipLevel = 0;
 	subresourceRange.levelCount = 1;
-	subresourceRange.layerCount = 6;
+	subresourceRange.layerCount = FaceSize;
 
 	d_vkCtx->transitionImageLayout(texture->image, format, vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal, subresourceRange);
 	d_vkCtx->copy(texture->image, stagebuffer->buffer, bufferCopyRegions, vk::ImageLayout::eTransferDstOptimal);

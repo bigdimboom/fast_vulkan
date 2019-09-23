@@ -11,9 +11,15 @@ layout (binding = 0) uniform UBO {
     mat4 model;
     mat4 view;
     mat4 proj;
+    vec3 campos;
 } ubo;
 
 layout (location = 0) out vec2 v_TexCoords;
+
+// environment map
+layout (location = 1) out vec3 Normal;
+layout (location = 2) out vec3 Position;
+layout (location = 3) out vec3 CameraPos;
 
 out gl_PerVertex 
 {
@@ -22,6 +28,10 @@ out gl_PerVertex
 
 void main()
 {
+    Normal = mat3(transpose(inverse(ubo.model))) * in_Normal;
+    Position = vec3(ubo.model * vec4(in_Position, 1.0));
+    CameraPos = ubo.campos;
+
     v_TexCoords = in_uv;
     gl_Position = ubo.proj * ubo.view * ubo.model * vec4(in_Position, 1.0);
     gl_Position.y = -gl_Position.y;

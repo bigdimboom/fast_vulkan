@@ -108,6 +108,17 @@ void SkyboxExample::render()
 			d_skyBox = std::make_unique<renderer::SkyboxRdr>(d_vkContext, d_camera, d_files);
 		}
 
+		static float blendrate = 1.0f;
+		if (ImGui::SliderFloat("blend rate", &blendrate, 0.0f, 1.0f))
+		{
+			d_cube->tweekTextureRate(blendrate);
+		}
+
+		if (ImGui::Button("load envrment map"))
+		{
+			d_cube = std::make_unique<renderer::TexturedCubeRdr>(d_vkContext, d_camera, d_skyBox->cubeMapInfo(), "assets/crate.png");
+		}
+
 		ImGui::End();
 	}
 
