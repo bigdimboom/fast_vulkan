@@ -1,11 +1,10 @@
 #include "skybox_rdr.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include  "../util/stb_image.h"
 #include <assert.h>
 #include <SDL2/SDL.h>
 
 #include "../app/system_mgr.h"
+
+#include "../util/image_utils.h"
 
 #define DEFAULT_TEXTURE "assets/default.png"
 
@@ -111,14 +110,14 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 		return false;
 	}
 
+	std::vector<uint8_t> image_buffer;
+
 	int channels = 4;
-	int width = 0, height = 0, nrComponents = 0;
-	unsigned char* data = stbi_load(faces[0].c_str(), &width, &height, &nrComponents, STBI_rgb_alpha);
-	if (!data)
+	int width = 0, height = 0;
+	if (!util::ImageUtility::load(faces[0], image_buffer, width, height, channels))
 	{
 		return false;
 	}
-	stbi_image_free(data);
 
 	vk::Format format = vk::Format::eR8G8B8A8Unorm;
 
@@ -144,11 +143,9 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 
 	for (unsigned int face_id = 0; face_id < FaceSize; face_id++)
 	{
-		unsigned char* data = stbi_load(faces[face_id].c_str(), &width, &height, &nrComponents, STBI_rgb_alpha);
-		if (data)
+		if (util::ImageUtility::load(faces[face_id], image_buffer, width, height, channels))
 		{
-			d_vkCtx->upload(*stagebuffer, data, width * height * channels, width * height * channels * face_id);
-
+			d_vkCtx->upload(*stagebuffer, image_buffer.data(), width * height * channels, width * height * channels * face_id);
 
 			vk::BufferImageCopy bufferCopyRegion = {};
 			bufferCopyRegion.imageSubresource.aspectMask = vk::ImageAspectFlagBits::eColor;
@@ -161,8 +158,6 @@ bool SkyboxRdr::loadCubeMap(const std::vector<std::string>& faces)
 			bufferCopyRegion.bufferOffset = width * height * channels * face_id;
 
 			bufferCopyRegions.push_back(bufferCopyRegion);
-
-			stbi_image_free(data);
 		}
 		else
 		{

@@ -148,6 +148,10 @@
     <ClCompile Include="source\engine\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="source\engine\imgui\imgui_impl_vulkan.cpp" />
     <ClCompile Include="source\engine\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="source\engine\mesh\basic_mesh.cpp" />
+    <ClCompile Include="source\engine\mesh\image.cpp" />
+    <ClCompile Include="source\engine\mesh\skinned_mesh.cpp" />
+    <ClCompile Include="source\engine\mesh\static_model.cpp" />
     <ClCompile Include="source\engine\renderer\irenderer.cpp" />
     <ClCompile Include="source\engine\renderer\renderer.cpp" />
     <ClCompile Include="source\engine\renderer\skybox_rdr.cpp" />
@@ -157,6 +161,7 @@
     <ClCompile Include="source\engine\window\vk_window.cpp" />
     <ClCompile Include="source\program\debug_gui_example.cpp" />
     <ClCompile Include="source\program\skybox_example.cpp" />
+    <ClCompile Include="source\program\static_mesh_example.cpp" />
     <ClCompile Include="source\program\textured_cube_example.cpp" />
     <ClCompile Include="source\program\triangle_example.cpp" />
     <ClCompile Include="source\test.main.cpp" />
@@ -181,6 +186,10 @@
     <ClInclude Include="source\engine\imgui\imstb_rectpack.h" />
     <ClInclude Include="source\engine\imgui\imstb_textedit.h" />
     <ClInclude Include="source\engine\imgui\imstb_truetype.h" />
+    <ClInclude Include="source\engine\mesh\basic_mesh.h" />
+    <ClInclude Include="source\engine\mesh\image.h" />
+    <ClInclude Include="source\engine\mesh\skinned_mesh.h" />
+    <ClInclude Include="source\engine\mesh\static_model.h" />
     <ClInclude Include="source\engine\renderer\irenderer.h" />
     <ClInclude Include="source\engine\renderer\renderer.h" />
     <ClInclude Include="source\engine\renderer\skybox_rdr.h" />
@@ -192,6 +201,7 @@
     <ClInclude Include="source\engine\window\vk_window.h" />
     <ClInclude Include="source\program\debug_gui_example.h" />
     <ClInclude Include="source\program\skybox_example.h" />
+    <ClInclude Include="source\program\static_mesh_example.h" />
     <ClInclude Include="source\program\textured_cube_example.h" />
     <ClInclude Include="source\program\triangle_example.h" />
   </ItemGroup>
