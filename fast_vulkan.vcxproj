@@ -190,6 +190,7 @@
     <ClInclude Include="source\engine\mesh\image.h" />
     <ClInclude Include="source\engine\mesh\skinned_mesh.h" />
     <ClInclude Include="source\engine\mesh\static_model.h" />
+    <ClInclude Include="source\engine\octree\linear_octree.h" />
     <ClInclude Include="source\engine\renderer\irenderer.h" />
     <ClInclude Include="source\engine\renderer\renderer.h" />
     <ClInclude Include="source\engine\renderer\skybox_rdr.h" />

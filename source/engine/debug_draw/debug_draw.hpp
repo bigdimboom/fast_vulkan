@@ -184,15 +184,17 @@
 // These are hard constraints. If not enough, change and recompile.
 //
 #ifndef DEBUG_DRAW_MAX_STRINGS
-#define DEBUG_DRAW_MAX_STRINGS 512
+#define DEBUG_DRAW_MAX_STRINGS 512 // default value
 #endif // DEBUG_DRAW_MAX_STRINGS
 
 #ifndef DEBUG_DRAW_MAX_POINTS
-#define DEBUG_DRAW_MAX_POINTS 8192
+//#define DEBUG_DRAW_MAX_POINTS 8192 // default value
+#define DEBUG_DRAW_MAX_POINTS (1024 * 1024)
 #endif // DEBUG_DRAW_MAX_POINTS
 
 #ifndef DEBUG_DRAW_MAX_LINES
-#define DEBUG_DRAW_MAX_LINES 32768
+//#define DEBUG_DRAW_MAX_LINES 32768 // default value
+#define DEBUG_DRAW_MAX_LINES (1024 * 1024)
 #endif // DEBUG_DRAW_MAX_LINES
 
 //
@@ -205,7 +207,8 @@
 // with this many entries.
 //
 #ifndef DEBUG_DRAW_VERTEX_BUFFER_SIZE
-#define DEBUG_DRAW_VERTEX_BUFFER_SIZE 4096
+//#define DEBUG_DRAW_VERTEX_BUFFER_SIZE 4096 // default value
+#define DEBUG_DRAW_VERTEX_BUFFER_SIZE (1024 * 1024)
 #endif // DEBUG_DRAW_VERTEX_BUFFER_SIZE
 
 //

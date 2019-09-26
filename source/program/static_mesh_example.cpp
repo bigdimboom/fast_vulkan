@@ -27,7 +27,7 @@ bool StaticMeshExample::initialize()
 	auto width = window().clentrez().x;
 	auto height = window().clentrez().y;
 	auto fov = 45.0f;
-	auto range = glm::vec2(0.01, 30.0f);
+	auto range = glm::vec2(0.01, 5000.0f);
 
 	vkapi::CtxSettings settings;
 	d_vkContext = std::make_shared<vkapi::Context>(window(), settings);
@@ -38,7 +38,21 @@ bool StaticMeshExample::initialize()
 
 	d_debugDraw = std::make_unique<dd::VkDDRenderInterface>(d_vkContext);
 
-	d_staticModel = std::make_shared<mesh::StaticModel>("assets/mesh/sibenik/sibenik.obj");
+	d_staticModel = std::make_shared<mesh::StaticModel>("assets/mesh/bedroom/iscv2.obj");
+
+
+	//auto size = sizeof(octree::LOctantNode<uint32_t>);
+	d_octree = std::make_unique<octree::LinearOctree<uint32_t>>(glm::vec3{-1000.0f, -1000.0f, -1000.0f}, 2000.0f, 10);
+
+	for (auto mesh : d_staticModel->meshes())
+	{
+		for (auto ind : mesh->indices)
+		{
+			const auto& pt = mesh->positions[ind];
+			octree::LinearOctree<uint32_t>::ErrorCode code;
+			auto& data = d_octree->push(pt, code);	
+		}
+	}
 
 	evDispatcher().listen(std::function<void(const SDL_Event & ev)>([this](const SDL_Event& ev)
 	{
@@ -78,16 +92,23 @@ void StaticMeshExample::render()
 	d_overlay->drawFPS();
 	d_overlay->end();
 
-	dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, dd::colors::Green); // Grid from -50 to +50 in both X & Z
+	dd::xzSquareGrid(-50.0f, 50.0f, -1.0f, 1.7f, dd::colors::Green, 0, false); // Grid from -50 to +50 in both X & Z
 	const ddVec3_In oo = { 0.0f,0.0f,0.0f };
 	const ddVec3_In cc = { 1.0f,0.0f,1.0f };
 	const ddVec3_In cx = { 0.2f,0.2f,1.0f };
 	const glm::mat4 transform(1.0);
 
 	dd::point(oo, cc, 10.0, 0, false);
-	dd::axisTriad(*((ddMat4x4_In*)& transform), 0.1f, 1.0f);
-	dd::box(oo, cx, 3, 3, 3);
+	dd::axisTriad(*((ddMat4x4_In*)& transform), 0.1f, 1.0f, 0, false);
+	//dd::box(oo, cx, 3, 3, 3);
 	d_debugDraw->drawLabel(*((glm::vec3*) & oo), { 0.8f, 0.0f, 0.3f }, "(0,0,0)", 1.5, d_camera.get());
+
+	d_octree->traverse([this](const glm::vec3& min, const glm::vec3& max, std::vector<uint32_t>* data) {
+		static glm::vec3 color(1.0, 0.0, 0.0);
+		dd::aabb(*((ddVec3_In*)& min), *((ddVec3_In*)& max), *((ddVec3_In*)& color));
+		return true;
+	});
+
 
 	if (d_shouldDraw)
 	{

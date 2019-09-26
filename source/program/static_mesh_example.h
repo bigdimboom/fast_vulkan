@@ -7,6 +7,8 @@
 #include "../engine/debug_draw/vk_dd.h"
 #include "../engine/mesh/static_model.h"
 
+#include "../engine/octree/linear_octree.h"
+
 #include <memory>
 
 namespace program
@@ -47,6 +49,8 @@ private:
 	std::unique_ptr<gui::VkOverlay> d_overlay;
 	std::unique_ptr<dd::VkDDRenderInterface> d_debugDraw;
 	std::shared_ptr<mesh::StaticModel> d_staticModel;
+
+	std::unique_ptr<octree::LinearOctree<uint32_t>> d_octree;
 };
 
 }
