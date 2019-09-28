@@ -1,4 +1,6 @@
 #include "static_mesh_example.h"
+#include <glm/gtc/matrix_transform.hpp>
+
 
 namespace program
 {
@@ -27,7 +29,7 @@ bool StaticMeshExample::initialize()
 	auto width = window().clentrez().x;
 	auto height = window().clentrez().y;
 	auto fov = 45.0f;
-	auto range = glm::vec2(0.01, 5000.0f);
+	auto range = glm::vec2(0.01, 100.0f);
 
 	vkapi::CtxSettings settings;
 	d_vkContext = std::make_shared<vkapi::Context>(window(), settings);
@@ -40,19 +42,22 @@ bool StaticMeshExample::initialize()
 
 	d_staticModel = std::make_shared<mesh::StaticModel>("assets/mesh/bedroom/iscv2.obj");
 
+	d_renderer = std::make_unique<renderer::StaticModelRenderer>(d_vkContext, d_camera);
+	d_renderer->setModel(d_staticModel, glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0)));
+	d_renderer->build(true);
 
-	//auto size = sizeof(octree::LOctantNode<uint32_t>);
-	d_octree = std::make_unique<octree::LinearOctree<uint32_t>>(glm::vec3{-1000.0f, -1000.0f, -1000.0f}, 2000.0f, 10);
+	////auto size = sizeof(octree::LOctantNode<uint32_t>);
+	//d_octree = std::make_unique<octree::LinearOctree<uint32_t>>(glm::vec3{-1000.0f, -1000.0f, -1000.0f}, 2000.0f, 10);
 
-	for (auto mesh : d_staticModel->meshes())
-	{
-		for (auto ind : mesh->indices)
-		{
-			const auto& pt = mesh->positions[ind];
-			octree::LinearOctree<uint32_t>::ErrorCode code;
-			auto& data = d_octree->push(pt, code);	
-		}
-	}
+	//for (auto mesh : d_staticModel->meshes())
+	//{
+	//	for (auto ind : mesh->indices)
+	//	{
+	//		const auto& pt = mesh->positions[ind];
+	//		octree::LinearOctree<uint32_t>::ErrorCode code;
+	//		auto& data = d_octree->push(pt, code);	
+	//	}
+	//}
 
 	evDispatcher().listen(std::function<void(const SDL_Event & ev)>([this](const SDL_Event& ev)
 	{
@@ -103,11 +108,11 @@ void StaticMeshExample::render()
 	//dd::box(oo, cx, 3, 3, 3);
 	d_debugDraw->drawLabel(*((glm::vec3*) & oo), { 0.8f, 0.0f, 0.3f }, "(0,0,0)", 1.5, d_camera.get());
 
-	d_octree->traverse([this](const glm::vec3& min, const glm::vec3& max, std::vector<uint32_t>* data) {
-		static glm::vec3 color(1.0, 0.0, 0.0);
-		dd::aabb(*((ddVec3_In*)& min), *((ddVec3_In*)& max), *((ddVec3_In*)& color));
-		return true;
-	});
+	//d_octree->traverse([this](const glm::vec3& min, const glm::vec3& max, std::vector<uint32_t>* data) {
+	//	static glm::vec3 color(1.0, 0.0, 0.0);
+	//	dd::aabb(*((ddVec3_In*)& min), *((ddVec3_In*)& max), *((ddVec3_In*)& color));
+	//	return true;
+	//});
 
 
 	if (d_shouldDraw)
@@ -118,6 +123,8 @@ void StaticMeshExample::render()
 		d_debugDraw->prepare();
 
 		d_vkContext->beginDefaultRenderPass();
+
+		d_renderer->render();
 
 		d_debugDraw->render();
 
@@ -141,7 +148,7 @@ void StaticMeshExample::cleanup()
 
 void StaticMeshExample::handleKeyboard(SDL_Keycode keycode)
 {
-	static float speed = 0.1f;
+	static float speed = 1.0f;
 
 	switch (keycode)
 	{

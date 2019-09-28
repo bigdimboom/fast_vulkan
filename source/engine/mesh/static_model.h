@@ -1,3 +1,4 @@
+#pragma once
 #include "basic_mesh.h"
 #include "image.h"
 #include <string>

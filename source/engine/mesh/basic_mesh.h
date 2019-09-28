@@ -12,6 +12,16 @@ using Tangent = glm::vec3;
 using BiTangent = glm::vec3;
 using Color = glm::vec4;
 
+struct Vertex
+{
+	Position point = { 0.0f, 0.0f, 0.0f };
+	Normal normal = { 0.0f, 0.0f, 0.0f };
+	Tangent tagent = { 0.0f, 0.0f, 0.0f };
+	BiTangent bitangent = { 0.0f, 0.0f, 0.0f };
+	Color color = { 0.0f, 0.0f, 0.0f, 1.0f };
+	UV uv = { 0.0f, 0.0f };
+};
+
 struct BasicMesh
 {
 	BasicMesh();

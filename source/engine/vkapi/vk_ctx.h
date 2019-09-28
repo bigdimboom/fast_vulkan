@@ -97,6 +97,9 @@ public:
 	template<class T>
 	std::shared_ptr<BufferObject> createVertexBufferObject(const std::vector<T>& data);
 
+	template<class T>
+	std::shared_ptr<BufferObject> createIndexBufferObject(const std::vector<T>& data);
+
 	std::shared_ptr<BufferObject> createUniformBufferObject(uint64_t size);
 
 	std::shared_ptr<BufferObject> createStagingBufferObject(uint64_t size);
@@ -234,6 +237,31 @@ inline std::shared_ptr<BufferObject> Context::createVertexBufferObject(const std
 	VmaAllocationCreateInfo vboAllocInfo = {};
 	vboInfo.size = data.size() * sizeof(T);
 	vboInfo.usage = vk::BufferUsageFlagBits::eVertexBuffer | vk::BufferUsageFlagBits::eTransferDst;
+	vboAllocInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;
+	auto vbo = createSharedBufferObject(vboInfo, vboAllocInfo);
+
+	vk::BufferCopy region = {};
+	region.size = data.size() * sizeof(T);
+	copy(vbo->buffer, stagebuffer->buffer, region);
+
+	return vbo;
+}
+
+template<class T>
+inline std::shared_ptr<BufferObject> Context::createIndexBufferObject(const std::vector<T>& data)
+{
+	vk::BufferCreateInfo stagingBufferInfo = {};
+	VmaAllocationCreateInfo stagingAllocInfo = {};
+	stagingBufferInfo.size = data.size() * sizeof(T);
+	stagingBufferInfo.usage = vk::BufferUsageFlagBits::eTransferSrc;
+	stagingAllocInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_CPU_TO_GPU;
+	auto stagebuffer = createSharedBufferObject(stagingBufferInfo, stagingAllocInfo);
+	upload(*stagebuffer, (void*)data.data(), data.size() * sizeof(T));
+
+	vk::BufferCreateInfo vboInfo = {};
+	VmaAllocationCreateInfo vboAllocInfo = {};
+	vboInfo.size = data.size() * sizeof(T);
+	vboInfo.usage = vk::BufferUsageFlagBits::eIndexBuffer | vk::BufferUsageFlagBits::eTransferDst;
 	vboAllocInfo.usage = VmaMemoryUsage::VMA_MEMORY_USAGE_GPU_ONLY;
 	auto vbo = createSharedBufferObject(vboInfo, vboAllocInfo);
 

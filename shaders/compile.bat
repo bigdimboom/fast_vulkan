@@ -14,4 +14,7 @@ start glslangValidator.exe -V .\cube_envmap.frag -o .\cube_envmap.frag.spv
 start glslangValidator.exe -V .\skybox.vert -o .\skybox.vert.spv
 start glslangValidator.exe -V .\skybox.frag -o .\skybox.frag.spv
 
+start glslangValidator.exe -V .\model.vert -o .\model.vert.spv
+start glslangValidator.exe -V .\model.frag -o .\model.frag.spv
+
 pause

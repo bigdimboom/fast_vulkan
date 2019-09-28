@@ -152,9 +152,11 @@
     <ClCompile Include="source\engine\mesh\image.cpp" />
     <ClCompile Include="source\engine\mesh\skinned_mesh.cpp" />
     <ClCompile Include="source\engine\mesh\static_model.cpp" />
+    <ClCompile Include="source\engine\mesh\util.cpp" />
     <ClCompile Include="source\engine\renderer\irenderer.cpp" />
     <ClCompile Include="source\engine\renderer\renderer.cpp" />
     <ClCompile Include="source\engine\renderer\skybox_rdr.cpp" />
+    <ClCompile Include="source\engine\renderer\static_model_renderer.cpp" />
     <ClCompile Include="source\engine\renderer\textured_cube_rdr.cpp" />
     <ClCompile Include="source\engine\util\image_utils.cpp" />
     <ClCompile Include="source\engine\vkapi\vk_ctx.cpp" />
@@ -190,10 +192,12 @@
     <ClInclude Include="source\engine\mesh\image.h" />
     <ClInclude Include="source\engine\mesh\skinned_mesh.h" />
     <ClInclude Include="source\engine\mesh\static_model.h" />
+    <ClInclude Include="source\engine\mesh\util.h" />
     <ClInclude Include="source\engine\octree\linear_octree.h" />
     <ClInclude Include="source\engine\renderer\irenderer.h" />
     <ClInclude Include="source\engine\renderer\renderer.h" />
     <ClInclude Include="source\engine\renderer\skybox_rdr.h" />
+    <ClInclude Include="source\engine\renderer\static_model_renderer.h" />
     <ClInclude Include="source\engine\renderer\textured_cube_rdr.h" />
     <ClInclude Include="source\engine\util\image_utils.h" />
     <ClInclude Include="source\engine\util\stb_image.h" />

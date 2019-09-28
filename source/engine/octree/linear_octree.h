@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <bitset>
 #include <assert.h>
+#include "../vkapi/data_type.h"
 
 namespace octree
 {
@@ -65,6 +66,7 @@ public:
 	LOctantNode<T>* parent_node(const LOctantNode<T>* node);
 	bool is_leaf(const LOctantNode<T>* node);
 	bool is_valid_node(LOctantNode<T>* node);
+	void linearProcess(std::function<void(LOctantNode<T>&)> callback, bool only_data_node);
 
 private:
 	Point d_min;
@@ -181,6 +183,28 @@ inline bool LinearOctree<T>::is_valid_node(LOctantNode<T>* node)
 {
 	assert(node);
 	return (node->childrenFlags == 0 && node->data != nullptr || node->childrenFlags != 0 && node->data == nullptr) ? true : false;
+}
+
+template<class T>
+inline void LinearOctree<T>::linearProcess(std::function<void(LOctantNode<T>&)> callback, bool only_data_node)
+{
+	if (only_data_node)
+	{
+		for (auto& elem : d_nodes)
+		{
+			if (is_leaf(&elem.second))
+			{
+				callback(elem.second);
+			}
+		}
+	}
+	else
+	{
+		for (auto& elem : d_nodes)
+		{
+			callback(elem.second);
+		}
+	}
 }
 
 template<class T>
@@ -376,6 +400,19 @@ inline bool LinearOctree<T>::is_bit_set_8bit(const uint8_t& flag, size_t index)
 	return wrapper[index];
 }
 
+// sample data node
+struct DrawMeshData
+{
+	std::size_t vbo_offset;
+	std::shared_ptr<vkapi::BufferObject> vbo;
+	std::shared_ptr<vkapi::BufferObject> ibo;
+	std::vector<uint32_t> ibo_host;
+	std::size_t draw_index_count;
+	std::size_t draw_instance_first_index = 0;
+	std::size_t draw_instance_count = 1;
+};
 
+using DrawMeshOctree = LinearOctree<DrawMeshData>;
+using DrawMeshNode = LOctantNode<DrawMeshData>;
 
 }// end namespace octree

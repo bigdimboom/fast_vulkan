@@ -6,8 +6,9 @@
 #include "../engine/gui/vk_overlay.h"
 #include "../engine/debug_draw/vk_dd.h"
 #include "../engine/mesh/static_model.h"
+//#include "../engine/octree/linear_octree.h"
+#include "../engine/renderer/static_model_renderer.h"
 
-#include "../engine/octree/linear_octree.h"
 
 #include <memory>
 
@@ -49,8 +50,9 @@ private:
 	std::unique_ptr<gui::VkOverlay> d_overlay;
 	std::unique_ptr<dd::VkDDRenderInterface> d_debugDraw;
 	std::shared_ptr<mesh::StaticModel> d_staticModel;
+	std::unique_ptr<renderer::StaticModelRenderer> d_renderer;
 
-	std::unique_ptr<octree::LinearOctree<uint32_t>> d_octree;
+	//std::unique_ptr<octree::LinearOctree<uint32_t>> d_octree;
 };
 
 }
